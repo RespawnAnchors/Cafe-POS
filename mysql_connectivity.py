@@ -1,4 +1,3 @@
-print("WELCOME TO ELYSIUM CAFE POS!!!")
 import mysql.connector as mc
 conn = mc.connect(host="localhost", user="root", password="pwd")
 cursor = conn.cursor()
@@ -66,9 +65,46 @@ def take_order(item_id, quantity):
 
 
 
-def restock_inventory():
+# def restock_inventory():#to restock the inventory if the quantity is less than the minimum stock
+#     q = "SELECT * FROM cafe_pos.inventory;"
+#     cursor.execute(q)
+#     result = cursor.fetchall()
+#     for row in result:
+#         item_id, quantity, minimum_stock = row
+#         if quantity < minimum_stock:
+#             restock_amount = minimum_stock - quantity
+#             new_quantity = quantity + restock_amount
+#             q = f"UPDATE cafe_pos.inventory SET quantity = {new_quantity} WHERE item_id = {item_id};"
+#             cursor.execute(q)
+#             conn.commit()
+#             print(f"Restocked item ID {item_id} by {restock_amount}. New quantity: {new_quantity}")
     
-    q = """UPDATE cafe_pos.inventory SET quantity = ;"""
-    print("Inventory restocked successfully!")
+    
+def display_inventory():
+    q = "SELECT * FROM cafe_pos.inventory;"
+    cursor.execute(q)
+    result = cursor.fetchall()
+    print("Inventory:")
+    for row in result:
+        print(f"Item ID: {row[0]}, Quantity: {row[1]}, Minimum Stock: {row[2]}")
 
-    #UNDER CONSTRUCTION!!!
+# def display_bill():
+#     q = "SELECT menu.item_name, menu.price, inventory.quantity FROM cafe_pos.menu JOIN cafe_pos.inventory ON menu.id = inventory.item_id;"
+#     cursor.execute(q)
+#     result = cursor.fetchall()
+#     total_amount = 0
+#     print("Bill:")
+#     for row in result:
+#         item_name, price, quantity = row
+#         amount = price * quantity
+#         total_amount += amount
+#         print(f"Item: {item_name}, Price: {price}, Quantity: {quantity}, Amount: {amount}")
+#     print(f"Total Amount: {total_amount}")
+
+#MAIN PROGRAM
+print("WELCOME TO ELYSIUM CAFE POS!!!")
+create_database()
+create_table_menu()
+create_table_inventory()
+display_menu()
+display_inventory()
