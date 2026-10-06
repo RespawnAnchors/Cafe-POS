@@ -1,4 +1,4 @@
-print("WELCOME TO ELYSIUM CAFE POS!!!")
+from datetime import date
 import mysql.connector as mc
 conn = mc.connect(host="localhost", user="root", password="pwd")
 cursor = conn.cursor()
@@ -22,10 +22,10 @@ def create_table_menu():
 
 def insert_fooditems(item_name, price, quantity):
     q = f"INSERT INTO cafe_pos.menu (item_name, price) VALUES ('{item_name}', {price});"
-    conn.commit()
     restock_inventory(item_name, quantity)
     cursor.execute(q)
     print("Item inserted successfully!")
+    conn.commit()
 
 def create_table_inventory():
     q = """
@@ -48,7 +48,8 @@ def display_menu():
     for row in result:
         print(f"ID: {row[0]}, Item Name: {row[1]}, Price: {row[2]}")
 
-def take_order(item_id, quantity):
+def take_order(item_name, quantity):
+    item_id = f"(SELECT id FROM cafe_pos.menu WHERE item_name = '{item_name}');"
     q = f"SELECT quantity FROM cafe_pos.inventory WHERE item_id = {item_id};"
     cursor.execute(q)
     result = cursor.fetchone()
@@ -64,24 +65,19 @@ def take_order(item_id, quantity):
     cursor.execute(q)
     conn.commit()
     print("Order placed successfully!")
+    price_query = f"SELECT price FROM cafe_pos.menu WHERE id = {item_id};"
+    return (item_name,price_query,quantity)
 
 def items_under_minimum_stock(): 
-    
-    
-    
-    #WHY JOIN???? -> PLEASE CHECK
-
-
-
     q = "SELECT menu.item_name, inventory.quantity, inventory.minimum_stock FROM cafe_pos.menu JOIN cafe_pos.inventory ON menu.id = inventory.item_id WHERE inventory.quantity < inventory.minimum_stock;"
     cursor.execute(q)
     result = cursor.fetchall()
-    print("Items under minimum stock:")
+    if q != "":
+        print("WARNING!!⚠️⚠️")
+        print("Items under minimum stock:")
     for row in result:
         print(f"Item Name: {row[0]}, Quantity: {row[1]}, Minimum Stock: {row[2]}")
-
-
-
+    
 def check_inventory():
     q = "SELECT menu.item_name, inventory.quantity FROM cafe_pos.menu JOIN cafe_pos.inventory ON menu.id = inventory.item_id;"
     cursor.execute(q)
@@ -93,53 +89,77 @@ def check_inventory():
 
 def restock_inventory(item_name, quantity):
     item_id = f"(SELECT id FROM cafe_pos.menu WHERE item_name = '{item_name}');"
-    q = f"UPDATE cafe_pos.inventory SET quantity = {quantity} WHERE item_id = {item_id};"
+    q = f"UPDATE cafe_pos.inventory SET quantity = quantity + {quantity} WHERE item_id = {item_id};"
     cursor.execute(q)
     conn.commit()
-    print("Inventory restocked successfully!")
+    if cursor.rowcount > 0:
+        print("Inventory restocked successfully!")
 
 #MAIN
 create_database()
 create_table_menu()
 create_table_inventory()
 
-
-# restock_inventory('Coffee', 50)
-# restock_inventory('Tea', 30)
-# restock_inventory('Sandwich', 20)
-# restock_inventory('Cake', 10)
-# restock_inventory('Juice', 25)
-# restock_inventory('Salad', 10)
-# restock_inventory('Soup', 5)
-# restock_inventory('Pasta', 12)
-
 #MAIN PROGRAM -> CAFE POS (MENU AND ORDERING SYSTEM USING Python AND MySQL)
-
+print("WELCOME TO ELYSIUM CAFE POS!!!")
 while True:
-    print("\n1. Display Menu")
-    print("2. Take Order")
-    print("3. See Inventory")
-    print("4. Restock")
-    print("5. Add New Item")
-    print("6. Exit")
-    choice = input("Enter your choice: ")
-    
-    if choice == '1':
-        display_menu()
-    elif choice == '2':
-        item_id = int(input("Enter item ID: "))
-        quantity = int(input("Enter quantity: "))
-        take_order(item_id, quantity)
-    elif choice == '3':
-        check_inventory()
-    elif choice == '4':
-        restock_inventory()
-    elif choice == '5':
-        item_name = input("Enter item name: ")
-        quantity = int(input("Enter quantity: "))
-        insert_fooditems(item_name, quantity)
-    elif choice == '6':
-        print("Exiting...")
-        break
-    else:
-        print("Invalid choice. Please try again.")
+    bill=[]
+    customer_name = input("Enter customer name: ")
+    while True:
+        print("\n1. Display Menu")
+        print("2. Take Order")
+        print("3. See Inventory")
+        print("4. Restock")
+        print("5. Add New Item")
+        print("6. Billing")
+        print("7. Exit")
+        choice = input("Enter your choice: ")
+        items_under_minimum_stock()
+
+        if choice == '1':
+            display_menu()
+        
+        elif choice == '2':
+            item_id = int(input("Enter item ID: "))
+            quantity = int(input("Enter quantity: "))
+            order_details = take_order(item_id, quantity)
+            bill.append(order_details)
+        elif choice == '3':
+            check_inventory()   
+        
+        elif choice == '4':
+            item_name = input("Enter item name: ")
+            quantity = int(input("Enter quantity to restock: "))
+            restock_inventory(item_name, quantity)
+        
+        elif choice == '5':
+            item_name = input("Enter item name: ")
+            quantity = int(input("Enter quantity: "))
+            price = float(input("Enter price: "))
+            insert_fooditems(item_name , price, quantity)
+        
+        elif choice == '6':
+            total_amount = 0
+            print("----- ELYSIUM CAFE -----")
+            print("----------BILL----------")
+            print(f"Customer Name: {customer_name}\tDate: {date.today()}")
+            print()
+            for item in bill:
+                print(f"Item: {item[0]}, Quantity: {item[1]}, Price: {item[2]}")
+                total_amount += item[1] * item[2]
+            print("Total Amount: ",int(total_amount))
+            print("------------------------")
+            print("Thank you for visiting ELYSIUM CAFE!")
+            print("------------------------")
+            print()
+        elif choice == '7':
+            print("Exiting...")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+            
+
+
+
+cursor.close()
+conn.close()
