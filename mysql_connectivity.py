@@ -1,12 +1,12 @@
 from datetime import date
 import mysql.connector as mc
-conn = mc.connect(host="localhost", user="root", password="pwd")
+conn = mc.connect(host="localhost", user="root", password="12345")
 cursor = conn.cursor()
+PASSWORD = "admin123"
 
 def create_database():
     q = "CREATE DATABASE IF NOT EXISTS cafe_pos;"
     cursor.execute(q)
-    print("Database created successfully!")
 
 def create_table_menu():
     q = """
@@ -18,7 +18,6 @@ def create_table_menu():
     """
     cursor.execute(q)
     conn.commit()
-    print("Table created successfully!")
 
 def insert_fooditems(item_name, price, quantity):
     q = f"INSERT INTO cafe_pos.menu (item_name, price) VALUES ('{item_name}', {price});"
@@ -44,9 +43,12 @@ def display_menu():
     q = "SELECT * FROM cafe_pos.menu;"
     cursor.execute(q)
     result = cursor.fetchall()
-    print("Menu:")
-    for row in result:
-        print(f"ID: {row[0]}, Item Name: {row[1]}, Price: {row[2]}")
+    print("\nMenu:")
+    if not result:
+        print("No items in the menu.")
+    else:
+        for row in result:
+            print(f"ID: {row[0]}, Item Name: {row[1]}, Price: {row[2]}")
 
 def take_order(item_name, quantity):
     item_id = f"(SELECT id FROM cafe_pos.menu WHERE item_name = '{item_name}');"
@@ -103,63 +105,87 @@ create_table_inventory()
 #MAIN PROGRAM -> CAFE POS (MENU AND ORDERING SYSTEM USING Python AND MySQL)
 print("WELCOME TO ELYSIUM CAFE POS!!!")
 while True:
-    bill=[]
-    customer_name = input("Enter customer name: ")
-    while True:
-        print("\n1. Display Menu")
-        print("2. Take Order")
-        print("3. See Inventory")
-        print("4. Restock")
-        print("5. Add New Item")
-        print("6. Billing")
-        print("7. Exit")
-        choice = input("Enter your choice: ")
+    print()
+    print("MAIN MENU")
+    print("\n1. Customer")
+    print("2. Owner")
+    print("3. Exit")
+    user_choice = input("Enter your choice: ")
+    if user_choice == '1':
+        customer_name = input("Enter customer name: ")
+        bill=[]
+        while True:
+            print(f"\nWelcome {customer_name} to ELYSIUM CAFE!")
+            print("\n1. Display Menu")
+            print("2. Take Order")
+            print("3. Billing")
+            print("4. Go back to main menu")
+            choice = input("Enter your choice: ")
+            if choice == '1':
+                display_menu()
+            elif choice == '2': #NEED TO UNDERSTAND HOW THIS WORKS (I FORGOT)
+                item_name = input("Enter item name: ")
+                quantity = int(input("Enter quantity: "))
+                order_details = take_order(item_name, quantity)
+                if order_details:
+                    bill.append(order_details)
+            elif choice == '3':
+                total_amount = 0
+                print()
+                print("----- ELYSIUM CAFE -----")
+                print("----------BILL----------")
+                print(f"Customer Name: {customer_name}\tDate: {date.today()}")
+                print()
+                for item in bill:
+                    print(f"Item: {item[0]}, Quantity: {item[2]}, Price: {item[1]}")
+                    total_amount += item[2] * item[1]
+                print("Total Amount: ",int(total_amount))
+                print("------------------------")
+                print("Thank you for visiting ELYSIUM CAFE!")
+                print("------------------------")
+                print()
+            elif choice == '4':
+                print("going back to main menu...")
+                break
+            else:
+                print("Invalid choice. Please try again.")
+    elif user_choice == '2':
+        password = input("Enter owner password: ")
+        if password != PASSWORD:
+            print("Incorrect password. Access denied.")
+            continue
+        #warning for items under minimum stock
         items_under_minimum_stock()
 
-        if choice == '1':
-            display_menu()
-        
-        elif choice == '2':
-            item_id = int(input("Enter item ID: "))
-            quantity = int(input("Enter quantity: "))
-            order_details = take_order(item_id, quantity)
-            bill.append(order_details)
-        elif choice == '3':
-            check_inventory()   
-        
-        elif choice == '4':
-            item_name = input("Enter item name: ")
-            quantity = int(input("Enter quantity to restock: "))
-            restock_inventory(item_name, quantity)
-        
-        elif choice == '5':
-            item_name = input("Enter item name: ")
-            quantity = int(input("Enter quantity: "))
-            price = float(input("Enter price: "))
-            insert_fooditems(item_name , price, quantity)
-        
-        elif choice == '6':
-            total_amount = 0
-            print("----- ELYSIUM CAFE -----")
-            print("----------BILL----------")
-            print(f"Customer Name: {customer_name}\tDate: {date.today()}")
-            print()
-            for item in bill:
-                print(f"Item: {item[0]}, Quantity: {item[1]}, Price: {item[2]}")
-                total_amount += item[1] * item[2]
-            print("Total Amount: ",int(total_amount))
-            print("------------------------")
-            print("Thank you for visiting ELYSIUM CAFE!")
-            print("------------------------")
-            print()
-        elif choice == '7':
-            print("Exiting...")
-            break
-        else:
-            print("Invalid choice. Please try again.")
-            
-
-
+        print("Access granted. Welcome, Owner!")
+        while True:
+            print("\nOwner Menu:")
+            print("\n1. See Inventory")
+            print("2. Restock")
+            print("3. Add New Item")
+            print("4. go back to main menu")
+            choice = input("Enter your choice: ")
+            if choice == '1':
+                check_inventory()   
+            elif choice == '2':
+                item_name = input("Enter item name: ")
+                quantity = int(input("Enter quantity to restock: "))
+                restock_inventory(item_name, quantity)
+            elif choice == '3':
+                item_name = input("Enter item name: ")
+                quantity = int(input("Enter quantity: "))
+                price = float(input("Enter price: "))
+                insert_fooditems(item_name , price, quantity)
+            elif choice == '4':
+                print("going back to main menu...")
+                break
+            else:
+                print("Invalid choice. Please try again.")
+    elif user_choice == '3':
+        print("Exiting...")
+        break
+    else:
+        print("Invalid choice. Please try again.")           
 
 cursor.close()
 conn.close()
