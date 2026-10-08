@@ -29,7 +29,7 @@ def insert_fooditems(item_name, price, quantity):
     q = f"INSERT INTO cafe_pos.menu (item_name, price) VALUES ('{item_name}', {price});"
     restock_inventory(item_name, quantity)
     cursor.execute(q)
-    console.print("✅ [bold green]Item inserted successfully![/bold green]")
+    console.print("✅ [green]Item inserted successfully![/green]")
     conn.commit()
 
 def create_table_inventory():
@@ -72,17 +72,17 @@ def take_order(item_name, quantity):
     cursor.execute(q)
     result = cursor.fetchone()
     if result is None:
-        console.print("❌ [bold red]Item not in stock.[/bold red]")
+        console.print("❌ [red]Item not in stock.[/red]")
         return
     available_quantity = result[0]
     if available_quantity < quantity:
-        console.print(f"❌ [bold red]Insufficient stock. Available quantity: {available_quantity}[/bold red]")
+        console.print(f"❌ [red]Insufficient stock. Available quantity: {available_quantity}[/red]")
         return
     new_quantity = available_quantity - quantity
     q = f"UPDATE cafe_pos.inventory SET quantity = {new_quantity} WHERE item_id = {item_id};"
     cursor.execute(q)
     conn.commit()
-    console.print("✅ [bold green]Order placed successfully![/bold green]")
+    console.print("✅ [green]Order placed successfully![/green]")
     price_query = f"SELECT price FROM cafe_pos.menu WHERE id = {item_id};"
     return (item_name,price_query,quantity)
 
@@ -91,7 +91,7 @@ def items_under_minimum_stock():
     cursor.execute(q)
     result = cursor.fetchall()
     if q != "":
-        console.print("⚠️ [bold yellow]WARNING!![/bold yellow] ⚠️")
+        console.print("⚠️ [yellow] WARNING!![/yellow] ⚠️")
         console.print("Items under minimum stock:")
     for row in result:
         console.print(f"Item Name: {row[0]}, Quantity: {row[1]}, Minimum Stock: {row[2]}")
@@ -113,12 +113,10 @@ def check_inventory():
     for row in result:
         quantity = row[1]
         minimum = row[2]
-
         if quantity < minimum:
-            quantity_color = "bold red"
+            quantity_color = " red"
         else:
-            quantity_color = "bold green"
-
+            quantity_color = " green"
         table.add_row(
             row[0],
             f"[{quantity_color}]{quantity}[/{quantity_color}]",
@@ -133,14 +131,14 @@ def restock_inventory(item_name, quantity):
     cursor.execute(q)
     conn.commit()
     if cursor.rowcount > 0:
-        console.print("✅ [bold green]Inventory restocked successfully![/bold green]")
+        console.print("✅ [green]Inventory restocked successfully![/green]")
 def welcome_screen():
     console.print()
 
     console.print(
         Align.center(
             Panel.fit(
-                "[bold cyan]☕ ELYSIUM CAFE ☕[/bold cyan]\n"
+                "[cyan]☕ ELYSIUM CAFE ☕[/cyan]\n"
                 "[white]Point Of Sale Management System[/white]",
                 border_style="bright_blue"
             )
@@ -148,7 +146,7 @@ def welcome_screen():
     )
 
     console.print(
-        Align.center("[italic green]Developed by Devrag & Vyshnav[/italic green]")
+        Align.center("[italic green]Developed by Devrag Vyshnav & Vinayak[/italic green]")
     )
 
     console.print()
@@ -161,31 +159,28 @@ create_table_inventory()
 welcome_screen()
 while True:
     console.print()
-
-    console.print("[bold magenta]========= MAIN MENU =========[/bold magenta]", justify="center")
-
+    console.print("[magenta]========= MAIN MENU =========[/magenta]", justify="center")
     console.print("[green][1][/green] Customer")
-
     console.print("[yellow][2][/yellow] Owner")
-
     console.print("[red][3][/red] Exit")
 
     console.print()
-    user_choice = console.input("[bold cyan]Enter your choice➜ [/bold cyan] ")
+    user_choice = console.input("[cyan]Enter your choice➜ [/cyan] ")
     if user_choice == '1':
-        customer_name = console.input("[bold cyan]Enter customer name: [/bold cyan] ")
+        customer_name = console.input("[cyan]Enter customer name: [/cyan] ")
         bill=[]
         while True:
+            console.rule("[green]Customer Menu[/green]")
             print(f"\nWelcome {customer_name} to ELYSIUM CAFE!")
             print("\n1. Display Menu")
             print("2. Take Order")
             print("3. Billing")
             print("4. Go back to main menu")
-            choice = console.input("[bold cyan]Enter your choice ➜ [/bold cyan]")
+            choice = console.input("[cyan]Enter your choice ➜ [/cyan]")
             if choice == '1':
                 display_menu()
-            elif choice == '2': #NEED TO UNDERSTAND HOW THIS WORKS (I FORGOT)
-                item_name = console.input("[bold cyan]Enter item name: [/bold cyan] ")
+            elif choice == '2':
+                item_name = console.input("[cyan]Enter item name: [/cyan] ")
                 quantity = int(input("Enter quantity: "))
                 order_details = take_order(item_name, quantity)
                 if order_details:
@@ -204,14 +199,14 @@ while True:
 
                 bill_table.add_column("Amount", justify="right")
                 print()
-                console.rule("[bold cyan]ELYSIUM CAFE[/bold cyan]")
-                console.rule("[bold cyan]BILL[/bold cyan]")
+                console.rule("[cyan]ELYSIUM CAFE[/cyan]")
+                console.rule("[cyan]BILL[/cyan]")
                 console.print(
-                f"[bold]Customer:[/bold] {customer_name}"
+                f"[]Customer:[/] {customer_name}"
             )
 
                 console.print(
-                    f"[bold]Date:[/bold] {date.today()}"
+                    f"[]Date:[/] {date.today()}"
             )
                 print()
                 for item in bill:
@@ -221,16 +216,16 @@ while True:
                     item[0],
                     str(item[2]),
                     f"₹{item[1]}",
-                    f"₹{amount}"
+                    f"₹{total_amount}"
                 )
                 console.print(bill_table)
                 console.print(
-                f"[bold green]TOTAL : ₹{total_amount:.2f}[/bold green]",
+                f"[ green]TOTAL : ₹{total_amount:.2f}[/ green]",
                 justify="right"
             )
                 console.print(
                 Panel.fit(
-                    "[bold green]Thank You For Visiting! ☕[/bold green]\n"
+                    "[ green]Thank You For Visiting! ☕[/ green]\n"
                     "Visit Again!",
                     border_style="green"
                 )
@@ -244,7 +239,7 @@ while True:
     elif user_choice == '2':
         password = input("Enter owner password: ")
         if password != PASSWORD:
-            console.print("🔒 [bold red]Incorrect password![/bold red]")
+            console.print("🔒 [red]Incorrect password![/red]")
             continue
         #warning for items under minimum stock
         items_under_minimum_stock()
@@ -278,7 +273,7 @@ while True:
 
         console.print(
             Panel.fit(
-                "[bold green]Thank You For Visiting ☕[/bold green]\n"
+                "[green]Thank You For Visiting ☕[/green]\n"
                 "Have A Great Day!",
                 border_style="green"
             ),
@@ -286,7 +281,7 @@ while True:
         )
         break
     else:
-        console.print("❌ [bold red]Invalid choice. Please try again.[/bold red]")
+        console.print("❌ [red]Invalid choice. Please try again.[/red]")
 
 cursor.close()
 conn.close()
